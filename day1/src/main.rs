@@ -8,8 +8,6 @@ fn main() {
         .map(|line| Rotation::from_str(line))
         .collect();
 
-    println!("{}", rotations.len());
-
     let mut lock = Lock::new();
 
     for rotation in rotations {
@@ -17,6 +15,7 @@ fn main() {
     }
 
     println!("First password should be {}", lock.zero_count);
+    println!("Second password should be {}", lock.zero_count_2);
 }
 
 
@@ -25,6 +24,7 @@ fn main() {
 enum Direction {
     L, R
 }
+
 struct Rotation {
     direction: Direction,
     distance: i64
@@ -32,16 +32,29 @@ struct Rotation {
 
 struct Lock {
     position: i64,
-    zero_count: u32
+    zero_count: u32,
+    zero_count_2: i64
 }
 
 impl Lock {
     pub fn new() -> Lock {
-        Lock { position : 50, zero_count : 0}
+        Lock { position : 50, zero_count : 0, zero_count_2 : 0}
     }
 
     fn inc(&mut self, rot: Rotation) {
         let rem: i64 = rot.distance % 100;
+
+
+        self.zero_count_2 += rot.distance / 100;
+
+        let passes_zero = match rot.direction {
+            Direction::R => {
+                self.position + rem >= 100
+            },
+            Direction::L => {
+                self.position != 0 && self.position - rem <= 0
+            }
+        };
 
         match rot.direction {
             Direction::R => self.position += rem,
@@ -53,6 +66,11 @@ impl Lock {
         if self.position == 0 {
             self.zero_count += 1;
         }
+
+        if passes_zero {
+            self.zero_count_2 += 1;
+        }
+        
     }
 }
 
